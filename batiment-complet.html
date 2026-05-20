@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Station Total - Bâtiment Complet - 3 Étages</title>
+<style>
+    body { margin: 0; overflow: hidden; font-family: 'Segoe UI', Arial, sans-serif; }
+    #info {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        background: rgba(0,0,0,0.85);
+        color: white;
+        padding: 15px 25px;
+        border-radius: 10px;
+        pointer-events: none;
+        z-index: 10;
+        font-size: 14px;
+        border-left: 4px solid #ff6b00;
+    }
+    #legend {
+        position: absolute;
+        bottom: 30px;
+        left: 30px;
+        background: rgba(0,0,0,0.85);
+        color: white;
+        padding: 12px 18px;
+        border-radius: 10px;
+        pointer-events: none;
+        z-index: 10;
+        font-size: 11px;
+        max-width: 250px;
+    }
+    #legend h3 { margin: 0 0 6px 0; color: #ff6b00; font-size: 13px; }
+    #legend .item { display: flex; align-items: center; margin: 2px 0; }
+    #legend .color-box { width: 12px; height: 12px; margin-right: 6px; border-radius: 2px; }
+    #controls {
+        position: absolute;
+        bottom: 30px;
+        right: 30px;
+        background: rgba(0,0,0,0.8);
+        color: white;
+        padding: 10px 15px;
+        border-radius: 10px;
+        z-index: 10;
+        font-size: 11px;
+        text-align: center;
+    }
+    #floor-selector {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: rgba(0,0,0,0.85);
+        color: white;
+        padding: 12px 18px;
+        border-radius: 10px;
+        z-index: 10;
+        font-size: 12px;
+        border: 1px solid #ff6b00;
+    }
+    #floor-selector button {
+        background: #333;
+        color: white;
+        border: 1px solid #555;
+        padding: 6px 14px;
+        margin: 3px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 12px;
+        transition: all 0.2s;
+    }
+    #floor-selector button:hover { background: #ff6b00; border-color: #ff6b00; }
+    #floor-selector button.active { background: #ff6b00; border-color: #ff6b00; font-weight: bold; }
+    #floor-selector .label { margin-bottom: 6px; opacity: 0.7; font-size: 11px; }
+</style>
+</head>
+<body>
+<div id="info">
+    <h2 style="margin:0; color:#ff6b00;">⛽ Station Total - Bâtiment Complet</h2>
+    <p style="margin:5px 0 0 0; opacity:0.8;">3 étages | RDC (Station) + 1er (Bureaux) + 2ème (Direction)</p>
+</div>
+<div id="floor-selector">
+    <div class="label">🗼 Étage visible :</div>
+    <button id="btn-all" class="active">Tous</button>
+    <button id="btn-rdc">RDC</button>
+    <button id="btn-1er">1er</button>
+    <button id="btn-2eme">2ème</button>
+</div>
+<div id="legend">
+    <h3>🏗️ Légende</h3>
+    <div class="item"><div class="color-box" style="background:#e76f51;"></div> RDC - Station/Boutique</div>
+    <div class="item"><div class="color-box" style="background:#4a90d9;"></div> 1er - Bureaux</div>
+    <div class="item"><div class="color-box" style="background:#50c878;"></div> 2ème - Direction</div>
+    <div class="item"><div class="color-box" style="background:#9b59b6;"></div> Sanitaires</div>
+    <div class="item"><div class="color-box" style="background:#f5a623;"></div> Accueil/Réception</div>
+    <div class="item"><div class="color-box" style="background:#6c757d;"></div> Technique/Circulations</div>
+</div>
+<div id="controls">
+    <span>🖱 Tourner | Molette : Zoom | Clic droit : Pan</span>
+</div>
+
+<script type="importmap">
+{
+    "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x1a1a2e);
+
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 200);
+camera.position.set(30, 25, 40);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.setPixelRatio(window.devicePixelRatio);
+document.body.appendChild(renderer.domElement);
+
+const labelRenderer = new CSS2DRenderer();
+labelRenderer.setSize(window.innerWidth, window.innerHeight);
+labelRenderer.domElement.style.position = 'absolute';
+labelRenderer.domElement.style.top = '0px';
+labelRenderer.domElement.style.left = '0px';
+labelRenderer.domElement.style.pointerEvents = 'none';
+document.body.appendChild(labelRenderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.1;
+controls.maxPolarAngle = Math.PI / 2.1;
+controls.minDistance = 10;
+controls.maxDistance = 80;
+controls.target.set(0, 4, 0);
+
+const ambientLight = new THREE.AmbientLight(0x404060, 0.5);
+scene.add(ambientLight);
+const sunLight = new THREE.DirectionalLight(0xffeedd, 1.5);
+sunLight.position.set(30, 40, 20);
+sunLight.castShadow = true;
+sunLight.shadow.mapSize.width = 4096;
+sunLight.shadow.mapSize.height = 4096;
+sunLight.shadow.camera.near = 1;
+sunLight.shadow.camera.far = 100;
+sunLight.shadow.camera.left = -50;
+sunLight.shadow.camera.right = 50;
+sunLight.shadow.camera.top = 50;
+sunLight.shadow.camera.bottom = -50;
+scene.add(sunLight);
+const fillLight = new THREE.DirectionalLight(0x4488ff, 0.3);
+fillLight.position.set(-20, 20, -20);
+scene.add(fillLight);
+const hemiLight = new THREE.HemisphereLight(0x87ceeb, 0x362d1a, 0.5);
+scene.add(hemiLight);
+
+const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(60, 50),
+    new THREE.MeshStandardMaterial({ color: 0x3a3a3a, roughness: 0.9 })
+);
+ground.rotation.x = -Math.PI / 2;
+ground.position.set(0, -0.05, 0);
+ground.receiveShadow = true;
+scene.add(ground);
+
+const grid = new THREE.GridHelper(50, 25, 0x444466, 0x333355);
+grid.position.y = 0;
+scene.add(grid);
+
+function createFloor(x, z, w, d, color, y = 0, h = 0.15) {
+    const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.8, metalness: 0.1 });
+    const floor = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+    floor.position.set(x, y, z);
+    floor.receiveShadow = true;
+    return floor;
+}
+
+function createWall(x, z, w, d, h = 2.8, color = 0xcccccc, opacity = 0.7, yBase = 0) {
+    const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.1, transparent: true, opacity });
+    const wall = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+    wall.position.set(x, yBase + h/2, z);
+    wall.castShadow = true;
+    wall.receiveShadow = true;
+    return wall;
+}
+
+function createLabel(text, x, z, y = 1.5, color = '#ffffff', size = '11px') {
+    const div = document.createElement('div');
+    div.textContent = text;
+    div.style.color = color;
+    div.style.fontFamily = 'Arial, sans-serif';
+    div.style.fontSize = size;
+    div.style.fontWeight = 'bold';
+    div.style.textShadow = '1px 1px 3px rgba(0,0,0,0.8)';
+    div.style.background = 'rgba(0,0,0,0.6)';
+    div.style.padding = '2px 7px';
+    div.style.borderRadius = '4px';
+    div.style.border = '1px solid rgba(255,255,255,0.15)';
+    div.style.backdropFilter = 'blur(3px)';
+    div.style.pointerEvents = 'none';
+    const label = new CSS2DObject(div);
+    label.position.set(x, y, z);
+    return label;
+}
+
+// Store all floor objects for visibility toggling
+const floorGroups = {
+    rdc: new THREE.Group(),
+    etage1: new THREE.Group(),
+    etage2: new THREE.Group()
+};
+
+const H = 2.8; // floor height
+const WC = 0xbbbbcc;
+
+// ==========================================
+// RDC (y=0)
+// ==========================================
+const gRDC = floorGroups.rdc;
+
+// Sol RDC
+gRDC.add(createFloor(0, 2, 22, 18, 0x3a3a3a, 0.05, 0.1));
+
+// Boutique FOC
+gRDC.add(createFloor(0, -4, 10, 8, 0xe76f51, 0.1));
+gRDC.add(createLabel('🏪 BOUTIQUE FOC\n79,98 m²', 0, -4, 1.5, '#ffffff', '12px'));
+gRDC.add(createWall(-5, -4, 0.12, 8, H, WC, 0));
+gRDC.add(createWall(5, -4, 0.12, 8, H, WC, 0));
+gRDC.add(createWall(0, -8, 10, 0.12, H, WC, 0));
+gRDC.add(createWall(0, 0, 10, 0.12, H, WC, 0));
+
+// Réserve FOC
+gRDC.add(createFloor(5, 5, 5, 5, 0xf4a261, 0.1));
+gRDC.add(createLabel('📦 RÉSERVE FOC', 5, 5, 1.5));
+
+// Chambre froide
+gRDC.add(createFloor(5, 10, 4, 3, 0xade8f4, 0.1));
+gRDC.add(createLabel('❄️ CHAMBRE FROIDE', 5, 10, 1.5));
+
+// Réserve
+gRDC.add(createFloor(-5, 8, 5, 5, 0xf4a261, 0.1));
+gRDC.add(createLabel('📦 RÉSERVE', -5, 8, 1.5));
+
+// Local Tech FOC
+gRDC.add(createFloor(-5, 14, 5, 4, 0x6c757d, 0.1));
+gRDC.add(createLabel('🔧 LOCAL TECH FOC', -5, 14, 1.5));
+
+// Toilettes FDC
+gRDC.add(createFloor(5, 15, 5, 3, 0x2a9d8f, 0.1));
+gRDC.add(createLabel('🚻 TOILETTES FDC', 5, 15, 1.5));
+
+// Local TGBT
+gRDC.add(createFloor(-12, 14, 5, 4, 0x6c757d, 0.1));
+gRDC.add(createLabel('⚡ LOCAL TGBT', -12, 14, 1.5));
+
+// Steppe épuration
+gRDC.add(createFloor(-18, 14, 5, 4, 0x495057, 0.1));
+gRDC.add(createLabel('💧 STEPPE ÉPURATION', -18, 14, 1.5));
+
+// Local transfo FOC
+gRDC.add(createFloor(-12, 8, 6, 4, 0x6c757d, 0.1));
+gRDC.add(createLabel('⚡ LOCAL TRANSFO FOC', -12, 8, 1.5));
+
+// Décanteur
+gRDC.add(createFloor(-18, 8, 4, 4, 0x495057, 0.1));
+gRDC.add(createLabel('💧 DÉCANTEUR', -18, 8, 1.5));
+
+// WC Hommes
+gRDC.add(createFloor(-8, -10, 3, 3, 0x2a9d8f, 0.1));
+gRDC.add(createLabel('🚹 WC', -8, -10, 1.5));
+// WC Femmes
+gRDC.add(createFloor(-4, -10, 3, 3, 0x2a9d8f, 0.1));
+gRDC.add(createLabel('🚺 WC', -4, -10, 1.5));
+// Douche
+gRDC.add(createFloor(0, -10, 3, 3, 0x2a9d8f, 0.1));
+gRDC.add(createLabel('🚿 DOUCHE', 0, -10, 1.5));
+
+// Mosquée
+gRDC.add(createFloor(18, 0, 8, 6, 0x9b59b6, 0.1));
+gRDC.add(createLabel('🕌 MOSQUÉE', 18, 0, 2.0, '#ffffff', '13px'));
+gRDC.add(createWall(14, 0, 0.12, 6, H, 0xbb99cc, 0));
+gRDC.add(createWall(22, 0, 0.12, 6, H, 0xbb99cc, 0));
+gRDC.add(createWall(18, -3, 8, 0.12, H, 0xbb99cc, 0));
+gRDC.add(createWall(18, 3, 8, 0.12, H, 0xbb99cc, 0));
+const dome = new THREE.Mesh(new THREE.SphereGeometry(1.2, 12, 12, 0, Math.PI*2, 0, Math.PI/2),
+    new THREE.MeshStandardMaterial({ color: 0xc9a84c, metalness: 0.7 }));
+dome.position.set(18, 3.0, 0); gRDC.add(dome);
+const minaret = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.25, 3.5),
+    new THREE.MeshStandardMaterial({ color: 0xbbaa99 }));
+minaret.position.set(21.5, 1.75, 0); gRDC.add(minaret);
+
+// Borne recharge
+gRDC.add(createFloor(15, 8, 4, 3, 0xe9c46a, 0.1));
+gRDC.add(createLabel('🔌 BORNE RECHARGE', 15, 8, 1.5));
+
+// Forage
+gRDC.add(createFloor(15, 12, 4, 3, 0x0077b6, 0.1));
+gRDC.add(createLabel('🛢️ FORAGE', 15, 12, 1.5));
+
+// Graissage PL
+gRDC.add(createFloor(12, -8, 6, 4, 0xe9c46a, 0.1));
+gRDC.add(createLabel('🔧 GRAISSAGE PL', 12, -8, 1.5));
+gRDC.add(createFloor(12, -3, 6, 4, 0xe9c46a, 0.1));
+gRDC.add(createLabel('🔧 GRAISSAGE PL', 12, -3, 1.5));
+
+// Aire de livraison
+gRDC.add(createFloor(-18, -8, 12, 8, 0x6c757d, 0.1));
+gRDC.add(createLabel('📦 AIRE LIVRAISON', -18, -8, 0.5));
+
+// Escalier
+gRDC.add(createFloor(-15, 4, 4, 3, 0xadb5bd, 0.1));
+gRDC.add(createLabel('🪜 ESCALIER', -15, 4, 0.5));
+
+// Murs extérieurs RDC
+gRDC.add(createWall(-10, 2, 20, 0.15, H, 0x8899bb, 0));
+gRDC.add(createWall(10, 2, 0.15, 16, H, 0x8899bb, 0));
+gRDC.add(createWall(0, -6, 20, 0.15, H, 0x8899bb, 0));
+gRDC.add(createWall(0, 18, 20, 0.15, H, 0x8899bb, 0));
+
+scene.add(gRDC);
+
+// ==========================================
+// 1ER ÉTAGE (y=3.0)
+// ==========================================
+const g1 = floorGroups.etage1;
+const Y1 = 3.0;
+
+// Sol 1er étage
+g1.add(createFloor(0, 2, 22, 18, 0x2a2a3e, Y1, 0.1));
+
+// Reprographie
+g1.add(createFloor(-8, -5, 5, 3.5, 0xd0021b, Y1+0.05));
+g1.add(createLabel('📄 REPROGRAPHIE\n12,76 m²', -8, -5, Y1+1.5));
+g1.add(createWall(-8-2.5, -5, 0.1, 3.5, H, WC, Y1));
+g1.add(createWall(-8+2.5, -5, 0.1, 3.5, H, WC, Y1));
+g1.add(createWall(-8, -5-1.75, 5, 0.1, H, WC, Y1));
+g1.add(createWall(-8, -5+1.75, 5, 0.1, H, WC, Y1));
+
+// Archives
+g1.add(createFloor(-8, 0, 4, 2.5, 0xd0021b, Y1+0.05));
+g1.add(createLabel('📦 ARCHIVES\n7,14 m²', -8, 0, Y1+1.5));
+
+// Espace 1
+g1.add(createFloor(0, -4, 8, 6, 0x4a90d9, Y1+0.05));
+g1.add(createLabel('🏢 ESPACE 1\n66,39 m²', 0, -4, Y1+1.5));
+g1.add(createWall(-4, -4, 0.1, 6, H, WC, Y1));
+g1.add(createWall(4, -4, 0.1, 6, H, WC, Y1));
+g1.add(createWall(0, -7, 8, 0.1, H, WC, Y1));
+g1.add(createWall(0, -1, 8, 0.1, H, WC, Y1));
+
+// Espace 2
+g1.add(createFloor(0, 5, 8, 7, 0x4a90d9, Y1+0.05));
+g1.add(createLabel('🏢 ESPACE 2\n78,21 m²', 0, 5, Y1+1.5));
+g1.add(createWall(-4, 5, 0.1, 7, H, WC, Y1));
+g1.add(createWall(4, 5, 0.1, 7, H, WC, Y1));
+g1.add(createWall(0, 1.5, 8, 0.1, H, WC, Y1));
+g1.add(createWall(0, 8.5, 8, 0.1, H, WC, Y1));
+
+// Espace 3
+g1.add(createFloor(8, 1, 5, 6, 0x4a90d9, Y1+0.05));
+g1.add(createLabel('🏢 ESPACE 3\n44,85 m²', 8, 1, Y1+1.5));
+
+// Toilettes
+g1.add(createFloor(8, -4, 3, 2.5, 0x9b59b6, Y1+0.05));
+g1.add(createLabel('🚺 TOILETTES FEMMES\n6,40 m²', 8, -4, Y1+1.5));
+g1.add(createFloor(8, -7.5, 3, 2.5, 0x9b59b6, Y1+0.05));
+g1.add(createLabel('🚹 TOILETTES HOMMES\n6,28 m²', 8, -7.5, Y1+1.5));
+g1.add(createFloor(8, -1, 3, 2.5, 0x9b59b6, Y1+0.05));
+g1.add(createLabel('🚺 WC FEMMES\n6,47 m²', 8, -1, Y1+1.5));
+
+// Bureau 1 / QHSE
+g1.add(createFloor(-5, -7, 5, 4, 0x4a90d9, Y1+0.05));
+g1.add(createLabel('BUREAU 1\nQHSE 23,42 m²', -5, -7, Y1+1.5));
+
+// Accueil / Assistante
+g1.add(createFloor(-5, -3.5, 5, 4, 0xf5a623, Y1+0.05));
+g1.add(createLabel('ACCUEIL\nASSISTANTE 27,85 m²', -5, -3.5, Y1+1.5));
+
+// SAS
+g1.add(createFloor(-5, -0.5, 3, 2, 0x6c757d, Y1+0.05));
+g1.add(createLabel('SAS 6,28 m²', -5, -0.5, Y1+1.5));
+
+// Bureau 2 / Agence Marine
+g1.add(createFloor(-5, 3, 5, 4.5, 0x4a90d9, Y1+0.05));
+g1.add(createLabel('BUREAU 2\nAGENCE MARINE 25,76 m²', -5, 3, Y1+1.5));
+
+// Bureau 3 / ACCONFE
+g1.add(createFloor(-5, 7, 5, 5, 0x4a90d9, Y1+0.05));
+g1.add(createLabel('BUREAU 3\nACCONFE 33,14 m²', -5, 7, Y1+1.5));
+
+// Bureau 4 / Transit
+g1.add(createFloor(3, 6, 6, 5, 0x4a90d9, Y1+0.05));
+g1.add(createLabel('BUREAU 4\nTRANSIT 37,84 m²', 3, 6, Y1+1.5));
+
+// Salle de Réunion
+g1.add(createFloor(3, -1, 6, 5, 0x50c878, Y1+0.05));
+g1.add(createLabel('SALLE DE RÉUNION\nCOMMUNE 49,57 m²', 3, -1, Y1+1.5));
+
+// Archives 2
+g1.add(createFloor(3, 5, 4, 3, 0xd0021b, Y1+0.05));
+g1.add(createLabel('📦 ARCHIVES\n15,26 m²', 3, 5, Y1+1.5));
+
+// Murs extérieurs 1er
+g1.add(createWall(-10, 2, 20, 0.15, H, 0x8899bb, Y1));
+g1.add(createWall(10, 2, 0.15, 16, H, 0x8899bb, Y1));
+g1.add(createWall(0, -6, 20, 0.15, H, 0x8899bb, Y1));
+g1.add(createWall(0, 18, 20, 0.15, H, 0x8899bb, Y1));
+
+scene.add(g1);
+
+// ==========================================
+// 2ÈME ÉTAGE (y=6.0)
+// ==========================================
+const g2 = floorGroups.etage2;
+const Y2 = 6.0;
+
+// Sol 2ème étage
+g2.add(createFloor(0, 2, 22, 18, 0x1a1a3e, Y2, 0.1));
+
+// Bureau 1
+g2.add(createFloor(-10, -2.5, 3.2, 3.2, 0x4a90d9, Y2+0.05));
+g2.add(createLabel('BUREAU 1', -10, -2.5, Y2+1.5));
+
+// RH
+g2.add(createFloor(-10, 1.5, 3.2, 3.2, 0xe74c3c, Y2+0.05));
+g2.add(createLabel('RH', -10, 1.5, Y2+1.5));
+
+// Bureau 2 DFC
+g2.add(createFloor(-5.5, 0, 5, 7, 0x4a90d9, Y2+0.05));
+g2.add(createLabel('BUREAU 2 DFC', -5.5, 0, Y2+1.5));
+
+// Accueil Assistante DG
+g2.add(createFloor(-10, -2.5, 3.2, 3.2, 0xf5a623, Y2+0.05));
+g2.add(createLabel('ACCUEIL\nASSISTANTE DG', -10, -2.5, Y2+1.5));
+
+// DG
+g2.add(createFloor(-5.5, -2.8, 2.5, 2.5, 0x50c878, Y2+0.05));
+g2.add(createLabel('DG', -5.5, -2.8, Y2+1.5));
+
+// Archives
+g2.add(createFloor(0.5, -2.5, 3, 3.2, 0xe74c3c, Y2+0.05));
+g2.add(createLabel('ARCHIVES', 0.5, -2.5, Y2+1.5));
+
+// Toilettes
+g2.add(createFloor(0.5, 1.8, 3, 3, 0x9b59b6, Y2+0.05));
+g2.add(createLabel('TOILETTES', 0.5, 1.8, Y2+1.5));
+
+// Accueil Assistante PDG
+g2.add(createFloor(5, 0, 5, 7, 0xf5a623, Y2+0.05));
+g2.add(createLabel('ACCUEIL\nASSISTANTE PDG', 5, 0, Y2+1.5));
+
+// Bureau PDG
+g2.add(createFloor(10, 0, 5, 7, 0x50c878, Y2+0.05));
+g2.add(createLabel('BUREAU PDG', 10, 0, Y2+1.5));
+
+// Murs extérieurs 2ème
+g2.add(createWall(-10, 2, 20, 0.15, H, 0x8899bb, Y2));
+g2.add(createWall(10, 2, 0.15, 16, H, 0x8899bb, Y2));
+g2.add(createWall(0, -6, 20, 0.15, H, 0x8899bb, Y2));
+g2.add(createWall(0, 18, 20, 0.15, H, 0x8899bb, Y2));
+
+scene.add(g2);
+
+// ==========================================
+// LABELS GÉNÉRAUX
+// ==========================================
+scene.add(createLabel('⛽ STATION TOTAL - BÂTIMENT COMPLET', 0, 20, 0.2, '#ff6b00', '20px'));
+scene.add(createLabel('RDC (Station) → 1er (Bureaux) → 2ème (Direction)', 0, 18.5, 0.2, '#ffffff', '13px'));
+scene.add(createLabel('PROJET DE CONSTRUCTION D\'UNE ESSENCERIE (TotalEnergies) | MARS 2025', 0, 17, 0.2, '#aaaaaa', '11px'));
+
+// ==========================================
+// FLOOR TOGGLE
+// ==========================================
+document.getElementById('btn-all').addEventListener('click', () => {
+    gRDC.visible = true; g1.visible = true; g2.visible = true;
+    document.querySelectorAll('#floor-selector button').forEach(b => b.classList.remove('active'));
+    document.getElementById('btn-all').classList.add('active');
+});
+document.getElementById('btn-rdc').addEventListener('click', () => {
+    gRDC.visible = true; g1.visible = false; g2.visible = false;
+    document.querySelectorAll('#floor-selector button').forEach(b => b.classList.remove('active'));
+    document.getElementById('btn-rdc').classList.add('active');
+});
+document.getElementById('btn-1er').addEventListener('click', () => {
+    gRDC.visible = false; g1.visible = true; g2.visible = false;
+    document.querySelectorAll('#floor-selector button').forEach(b => b.classList.remove('active'));
+    document.getElementById('btn-1er').classList.add('active');
+});
+document.getElementById('btn-2eme').addEventListener('click', () => {
+    gRDC.visible = false; g1.visible = false; g2.visible = true;
+    document.querySelectorAll('#floor-selector button').forEach(b => b.classList.remove('active'));
+    document.getElementById('btn-2eme').classList.add('active');
+});
+
+// ==========================================
+// ANIMATION
+// ==========================================
+function animate() {
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+    labelRenderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    labelRenderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+console.log('✅ Station Total - Bâtiment complet chargé !');
+</script>
+</body>
+</html>

@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Villa Douala - Décoration 3D</title>
+<style>
+    body { margin: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
+    #info {
+        position: absolute; top: 20px; left: 20px;
+        background: rgba(0,0,0,0.85); color: white;
+        padding: 15px 25px; border-radius: 10px;
+        pointer-events: none; z-index: 10; font-size: 14px;
+        border-left: 4px solid #c9a84c;
+    }
+    #legend {
+        position: absolute; bottom: 30px; left: 30px;
+        background: rgba(0,0,0,0.85); color: white;
+        padding: 12px 18px; border-radius: 10px;
+        pointer-events: none; z-index: 10; font-size: 11px; max-width: 220px;
+    }
+    #legend h3 { margin: 0 0 6px 0; color: #c9a84c; font-size: 13px; }
+    #legend .item { display: flex; align-items: center; margin: 2px 0; }
+    #legend .dot { width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+    #controls {
+        position: absolute; bottom: 30px; right: 30px;
+        background: rgba(0,0,0,0.8); color: white;
+        padding: 10px 15px; border-radius: 10px;
+        z-index: 10; font-size: 11px; text-align: center;
+    }
+</style>
+</head>
+<body>
+<div id="info">
+    <h2 style="margin:0; color:#c9a84c;">🏡 Villa Douala - Décoration</h2>
+    <p style="margin:5px 0 0 0; opacity:0.8;">Style African Contemporary Luxury</p>
+</div>
+<div id="legend">
+    <h3>🎨 Palette</h3>
+    <div class="item"><div class="dot" style="background:#D4A373;"></div> Sable / Murs</div>
+    <div class="item"><div class="dot" style="background:#2D6A4F;"></div> Vert forêt</div>
+    <div class="item"><div class="dot" style="background:#0077B6;"></div> Bleu / Eau</div>
+    <div class="item"><div class="dot" style="background:#E76F51;"></div> Terre cuite</div>
+    <div class="item"><div class="dot" style="background:#C9A84C;"></div> Or / Cuivre</div>
+</div>
+<div id="controls"><span>🖱 Tourner • Molette : Zoom • Clic droit : Pan</span></div>
+
+<script type="importmap">
+{
+    "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x1a1a2e);
+scene.fog = new THREE.Fog(0x1a1a2e, 60, 100);
+
+const camera = new THREE.PerspectiveCamera(40, window.innerWidth/window.innerHeight, 0.1, 200);
+camera.position.set(35, 28, 45);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+document.body.appendChild(renderer.domElement);
+
+const labelRenderer = new CSS2DRenderer();
+labelRenderer.setSize(window.innerWidth, window.innerHeight);
+labelRenderer.domElement.style.position = 'absolute';
+labelRenderer.domElement.style.top = '0';
+labelRenderer.domElement.style.left = '0';
+labelRenderer.domElement.style.pointerEvents = 'none';
+document.body.appendChild(labelRenderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.maxPolarAngle = Math.PI / 2.3;
+controls.minDistance = 8;
+controls.maxDistance = 90;
+controls.target.set(0, 2, 0);
+
+// Lighting
+const ambient = new THREE.AmbientLight(0x404060, 0.3);
+scene.add(ambient);
+const sun = new THREE.DirectionalLight(0xffeedd, 2.0);
+sun.position.set(35, 45, 25);
+sun.castShadow = true;
+sun.shadow.mapSize.set(4096, 4096);
+sun.shadow.camera.near = 0.5;
+sun.shadow.camera.far = 100;
+sun.shadow.camera.left = -50;
+sun.shadow.camera.right = 50;
+sun.shadow.camera.top = 50;
+sun.shadow.camera.bottom = -50;
+scene.add(sun);
+const fill = new THREE.DirectionalLight(0x4488ff, 0.4);
+fill.position.set(-20, 15, -20);
+scene.add(fill);
+const hemi = new THREE.HemisphereLight(0x87ceeb, 0x8B6914, 0.6);
+scene.add(hemi);
+
+// Ground
+const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(100, 80),
+    new THREE.MeshStandardMaterial({ color: 0x3a4a2a, roughness: 0.9 })
+);
+ground.rotation.x = -Math.PI/2;
+ground.position.y = -0.05;
+ground.receiveShadow = true;
+scene.add(ground);
+
+// Grid
+const grid = new THREE.GridHelper(80, 30, 0x556644, 0x445533);
+grid.position.y = 0;
+scene.add(grid);
+
+// Helpers
+function fl(x, z, w, d, c, y=0) {
+    const m = new THREE.MeshStandardMaterial({ color: c, roughness: 0.7, metalness: 0.1 });
+    const f = new THREE.Mesh(new THREE.BoxGeometry(w, 0.08, d), m);
+    f.position.set(x, y, z);
+    f.receiveShadow = true;
+    return f;
+}
+function wl(x, z, w, d, h=3.0, c=0xcccccc, o=0.6, y=0) {
+    const m = new THREE.MeshStandardMaterial({ color: c, roughness: 0.7, metalness: 0.1, transparent: true, opacity: o });
+    const wall = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m);
+    wall.position.set(x, y+h/2, z);
+    wall.castShadow = true;
+    wall.receiveShadow = true;
+    return wall;
+}
+function lb(text, x, z, y=1.5, c='#fff', s='12px') {
+    const d = document.createElement('div');
+    d.textContent = text; d.style.color = c;
+    d.style.fontFamily = 'Arial, sans-serif'; d.style.fontSize = s;
+    d.style.fontWeight = 'bold';
+    d.style.textShadow = '1px 1px 3px rgba(0,0,0,0.8)';
+    d.style.background = 'rgba(0,0,0,0.5)'; d.style.padding = '3px 8px';
+    d.style.borderRadius = '5px'; d.style.border = '1px solid rgba(255,255,255,0.15)';
+    d.style.backdropFilter = 'blur(3px)'; d.style.pointerEvents = 'none';
+    const l = new CSS2DObject(d);
+    l.position.set(x, y, z);
+    return l;
+}
+
+// ========== VILLA CONSTRUCTION ==========
+const H = 3.2;
+const SAND = 0xD4A373;
+const SAND_L = 0xE8D5B7;
+const WOOD = 0x8B6914;
+const WOOD_D = 0x4A2C2A;
+const GREEN = 0x2D6A4F;
+const BLUE = 0x0077B6;
+const TERRA = 0xE76F51;
+const GOLD = 0xC9A84C;
+const WHITE = 0xF5F0E8;
+const WALL = 0xCCBBAA;
+
+// === MAIN BUILDING ENVELOPE ===
+const BW = 38, BD = 28;
+scene.add(wl(0, -BD/2, BW, 0.15, H, WALL, 0.3));
+scene.add(wl(0, BD/2, BW, 0.15, H, WALL, 0.3));
+scene.add(wl(-BW/2, 0, 0.15, BD, H, WALL, 0.3));
+scene.add(wl(BW/2, 0, 0.15, BD, H, WALL, 0.3));
+
+// === FOYER (centre) ===
+const foyer = fl(0, 0, 6, 5, SAND_L);
+scene.add(foyer);
+scene.add(lb('🚪 FOYER • Marbre beige • Lustre rotin', 0, 0, 2.5, '#fff', '13px'));
+// Console
+const console = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.9, 0.4), new THREE.MeshStandardMaterial({ color: WOOD_D, roughness: 0.5 }));
+console.position.set(0, 0.45, -2.2); console.castShadow = true; scene.add(console);
+// Miroir
+const mirror = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.8, 0.05), new THREE.MeshStandardMaterial({ color: 0x88ccff, roughness: 0.1, metalness: 0.9 }));
+mirror.position.set(0, 1.8, -2.4); scene.add(mirror);
+
+// === GRAND LIVING (10x14m) ===
+const living = fl(8, -5, 10, 14, SAND);
+scene.add(living);
+scene.add(lb('🛋️ GRAND LIVING • Béton ciré sable • Canapés lin', 8, -5, 2.5, '#fff', '13px'));
+// Canapés
+function sofa(x, z, w, rot=0) {
+    const g = new THREE.Group();
+    const base = new THREE.Mesh(new THREE.BoxGeometry(w, 0.5, 0.9), new THREE.MeshStandardMaterial({ color: 0xE8D5B7, roughness: 0.8 }));
+    base.position.set(0, 0.25, 0); base.castShadow = true; g.add(base);
+    const back = new THREE.Mesh(new THREE.BoxGeometry(w, 0.4, 0.1), new THREE.MeshStandardMaterial({ color: 0xD4A373, roughness: 0.9 }));
+    back.position.set(0, 0.55, -0.4); g.add(back);
+    // Coussins
+    for (let i = -w/2+0.3; i < w/2-0.2; i+=0.6) {
+        const c = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.15, 0.5), new THREE.MeshStandardMaterial({ color: [TERRA, GREEN, BLUE][Math.floor(Math.random()*3)], roughness: 0.9 }));
+        c.position.set(i, 0.4, 0.1); g.add(c);
+    }
+    g.position.set(x, 0, z); g.rotation.y = rot;
+    return g;
+}
+scene.add(sofa(4, -8, 3, 0));
+scene.add(sofa(7, -8, 3, 0));
+scene.add(sofa(10, -8, 3, 0));
+// Table basse
+const tb = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 1.0, 0.3, 8), new THREE.MeshStandardMaterial({ color: WOOD_D, roughness: 0.6 }));
+tb.position.set(7, 0.15, -7); tb.castShadow = true; scene.add(tb);
+const tbTop = new THREE.Mesh(new THREE.CircleGeometry(0.9, 16), new THREE.MeshStandardMaterial({ color: 0x88aacc, roughness: 0.2, metalness: 0.3, transparent: true, opacity: 0.8 }));
+tbTop.rotation.x = -Math.PI/2; tbTop.position.set(7, 0.3, -7); scene.add(tbTop);
+// Tapis
+const tapis = new THREE.Mesh(new THREE.BoxGeometry(3.5, 0.02, 2.5), new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.9 }));
+tapis.position.set(7, 0.01, -7); scene.add(tapis);
+// Fauteuil rotin
+function rotinChair(x, z, rot=0) {
+    const g = new THREE.Group();
+    const s = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.5, 0.6), new THREE.MeshStandardMaterial({ color: 0xD4A373, roughness: 0.9 }));
+    s.position.set(0, 0.25, 0); s.castShadow = true; g.add(s);
+    const b = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.4, 0.05), new THREE.MeshStandardMaterial({ color: 0xD4A373, roughness: 0.9 }));
+    b.position.set(0, 0.55, -0.3); g.add(b);
+    g.position.set(x, 0, z); g.rotation.y = rot;
+    return g;
+}
+scene.add(rotinChair(5, -9.5, 0.3));
+scene.add(rotinChair(9, -9.5, -0.3));
+
+// === DINING (7x10m) ===
+const dining = fl(0, 10, 7, 10, SAND_L);
+scene.add(dining);
+scene.add(lb('🍽️ DINING • Table iroko 12 places', 0, 10, 2.5, '#fff', '13px'));
+// Table
+const table = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.08, 1.2), new THREE.MeshStandardMaterial({ color: WOOD_D, roughness: 0.5 }));
+table.position.set(0, 0.74, 10); table.castShadow = true; scene.add(table);
+// Chaises
+for (let i = -1; i <= 1; i+=0.5) {
+    const ch = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.5, 0.45), new THREE.MeshStandardMaterial({ color: 0xD4A373, roughness: 0.8 }));
+    ch.position.set(i, 0.25, 10.8); ch.castShadow = true; scene.add(ch);
+    const ch2 = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.5, 0.45), new THREE.MeshStandardMaterial({ color: 0xD4A373, roughness: 0.8 }));
+    ch2.position.set(i, 0.25, 9.2); ch2.castShadow = true; scene.add(ch2);
+}
+// Suspension
+const susp = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8), new THREE.MeshStandardMaterial({ color: GOLD, emissive: GOLD, emissiveIntensity: 0.3 }));
+susp.position.set(0, 2.8, 10); scene.add(susp);
+
+// === KITCHEN (6x7.3m) ===
+const kitchen = fl(-8, 10, 6, 7.3, 0xF5F0E8);
+scene.add(kitchen);
+scene.add(lb('🍳 CUISINE • Zellige vert • Îlot central', -8, 10, 2.5, '#fff', '12px'));
+// Îlot
+const ilot = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.9, 1.0), new THREE.MeshStandardMaterial({ color: 0x2D6A4F, roughness: 0.3 }));
+ilot.position.set(-8, 0.45, 9.5); ilot.castShadow = true; scene.add(ilot);
+const ilotTop = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.04, 1.1), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.1 }));
+ilotTop.position.set(-8, 0.92, 9.5); scene.add(ilotTop);
+
+// === HOME THEATRE (7.42x6.1m) ===
+const theatre = fl(18, -12, 7.42, 6.1, 0x2a2a2a);
+scene.add(theatre);
+scene.add(lb('🎬 HOME THEATRE • Dolby Atmos 7.1', 18, -12, 2.5, '#fff', '12px'));
+// Sièges
+for (let r = 0; r < 2; r++) {
+    for (let s = -1; s <= 1; s+=1) {
+        const seat = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.6, 0.7), new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.9 }));
+        seat.position.set(18+s*0.8, 0.3, -12+1.5+r*1.2); scene.add(seat);
+    }
+}
+// Écran
+const screen = new THREE.Mesh(new THREE.BoxGeometry(3, 1.8, 0.05), new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0x4488ff, emissiveIntensity: 0.1 }));
+screen.position.set(18, 1.2, -15); scene.add(screen);
+
+// === BAR AREA (9.635x6.7m) ===
+const bar = fl(18, -3, 9.635, 6.7, 0x3a2a1a);
+scene.add(bar);
+scene.add(lb('🍷 BAR • Marbre noir • Cuir cognac', 18, -3, 2.5, '#fff', '12px'));
+// Comptoir
+const comptoir = new THREE.Mesh(new THREE.BoxGeometry(3, 1.0, 0.6), new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.2, metalness: 0.5 }));
+comptoir.position.set(18, 0.5, -5.5); scene.add(comptoir);
+const comptoirTop = new THREE.Mesh(new THREE.BoxGeometry(3.1, 0.04, 0.7), new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.1, metalness: 0.8 }));
+comptoirTop.position.set(18, 1.02, -5.5); scene.add(comptoirTop);
+// Tabourets
+for (let i = -1; i <= 1; i+=0.5) {
+    const stool = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.2, 0.7), new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.8 }));
+    stool.position.set(18+i*0.6, 0.35, -4.8); scene.add(stool);
+}
+
+// === SPA ZONE ===
+const spa = fl(25, 5, 8, 8, 0x2a9d8f);
+scene.add(spa);
+scene.add(lb('🧖 SPA • Hammam • Sauna • Massage', 25, 5, 2.5, '#fff', '12px'));
+// Banquettes
+for (let i = 0; i < 3; i++) {
+    const bench = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.4, 0.5), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 }));
+    bench.position.set(23+i*1.2, 0.2, 5); scene.add(bench);
+}
+
+// === GYM (4.4x8.73m) ===
+const gym = fl(25, -8, 4.4, 8.73, 0x264653);
+scene.add(gym);
+scene.add(lb('🏋️ GYM • Miroirs • Cardio', 25, -8, 2.5, '#fff', '12px'));
+// Tapis roulant
+const tm = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.3, 1.5), new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.8 }));
+tm.position.set(25, 0.15, -8); scene.add(tm);
+
+// === GUEST HOUSE / BEDROOM ===
+const guest = fl(-15, 5, 12, 10, SAND_L);
+scene.add(guest);
+scene.add(lb('🛏️ GUEST HOUSE • Lit king size • Moustiquaire', -15, 5, 2.5, '#fff', '12px'));
+// Lit
+const lit = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.4, 2.0), new THREE.MeshStandardMaterial({ color: 0xF5F0E8, roughness: 0.9 }));
+lit.position.set(-15, 0.2, 5); lit.castShadow = true; scene.add(lit);
+// Tête de lit
+const tete = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.8, 0.1), new THREE.MeshStandardMaterial({ color: 0xD4A373, roughness: 0.8 }));
+tete.position.set(-15, 0.6, 4); scene.add(tete);
+
+// === BEDROOM-1 ===
+const bdrm = fl(-15, -3, 5.2, 4.0, SAND_L);
+scene.add(bdrm);
+scene.add(lb('🛏️ BEDROOM-1 • Accès piscine', -15, -3, 2.0, '#fff', '11px'));
+
+// === POOL AREA ===
+const pool = fl(20, 5, 14, 8, BLUE, 0.05);
+scene.add(pool);
+scene.add(lb('🏊 PISCINE À DÉBORDEMENT', 20, 5, 0.5, '#caf0f8', '14px'));
+// Bordure bois
+const boisPool = new THREE.Mesh(new THREE.BoxGeometry(14.5, 0.1, 0.3), new THREE.MeshStandardMaterial({ color: WOOD_D, roughness: 0.8 }));
+boisPool.position.set(20, 0.1, 1.5); scene.add(boisPool);
+boisPool.position.set(20, 0.1, 8.5); scene.add(boisPool);
+// Transats
+for (let i = -1; i <= 1; i+=0.5) {
+    const t = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.2, 1.8), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 }));
+    t.position.set(20+i*0.8, 0.15, 1.8); scene.add(t);
+}
+
+// === WATER BODY ===
+const water = fl(5, -15, 10, 5, 0x0055aa, 0.02);
+scene.add(water);
+scene.add(lb('💧 PLAN D\'EAU • Fontaines', 5, -15, 0.5, '#90e0ef', '12px'));
+
+// === PADEL COURT ===
+const padel = fl(-15, -30, 18, 10, 0x2d6a4f);
+scene.add(padel);
+scene.add(lb('🏟️ PADEL COURT', -15, -30, 0.5, '#90e0ef', '14px'));
+// Grillage
+for (let i = -9; i <= 9; i+=3) {
+    const poteau = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 2), new THREE.MeshStandardMaterial({ color: 0x888888 }));
+    poteau.position.set(-15+i, 1, -30-5); scene.add(poteau);
+}
+
+// === BAR SHACK ===
+const shack = fl(10, -32, 6, 5, 0xD4A373);
+scene.add(shack);
+scene.add(lb('🍸 BAR SHACK • Toit chaume', 10, -32, 1.5, '#fff', '12px'));
+// Toit chaume
+const chaume = new THREE.Mesh(new THREE.ConeGeometry(3.5, 1.5, 6), new THREE.MeshStandardMaterial({ color: 0x8B7355, roughness: 0.9 }));
+chaume.position.set(10, 1.5, -32); scene.add(chaume);
+
+// === OPEN LAWN ===
+const lawn = fl(25, -25, 14, 10, 0x606c38);
+scene.add(lawn);
+scene.add(lb('🌿 OPEN LAWN • Pelouse • Palmiers', 25, -25, 0.5, '#fff', '12px'));
+
+// === MAIN ENTRANCE ===
+const ent = fl(-25, -10, 8, 4, 0xb08968);
+scene.add(ent);
+scene.add(lb('🚗 MAIN ENTRANCE', -25, -10, 0.5, '#fff', '11px'));
+
+// === PARKING ===
+const park = fl(-20, 12, 10, 7, 0x6c757d);
+scene.add(park);
+scene.add(lb('🚘 PARKING COUVERT', -20, 12, 0.5, '#fff', '11px'));
+
+// === MOSQUÉE ===
+const mosque = fl(-30, -5, 7, 5, 0x9b59b6);
+scene.add(mosque);
+scene.add(lb('🕌 MOSQUÉE', -30, -5, 2.0, '#fff', '12px'));
+const dome2 = new THREE.Mesh(new THREE.SphereGeometry(1.2, 12, 12, 0, Math.PI*2, 0, Math.PI/2),
+    new THREE.MeshStandardMaterial({ color: GOLD, metalness: 0.7 }));
+dome2.position.set(-30, 3.0, -5); scene.add(dome2);
+
+// === TREES ===
+function tree(x, z, s=1) {
+    const g = new THREE.Group();
+    const t = new THREE.Mesh(new THREE.CylinderGeometry(0.08*s, 0.15*s, 1.5*s), new THREE.MeshStandardMaterial({ color: 0x8B7355, roughness: 0.9 }));
+    t.position.y = 0.75*s; t.castShadow = true; g.add(t);
+    const l = new THREE.Mesh(new THREE.SphereGeometry(0.7*s, 6, 6), new THREE.MeshStandardMaterial({ color: 0x2d6a4f, roughness: 0.8 }));
+    l.position.y = 1.8*s; l.scale.y = 0.6; l.castShadow = true; g.add(l);
+    g.position.set(x, 0, z);
+    return g;
+}
+const trees = [
+    [-5,-12],[5,-12],[-10,20],[10,20],[30,-15],[30,0],[30,15],
+    [-20,-15],[-20,20],[-30,-5],[15,-20],[-15,-20],
+    [0,-25],[10,-28],[-10,-28],[-25,-20],[25,-30],[-28,10]
+];
+for (const [x,z] of trees) scene.add(tree(x, z, 0.7+Math.random()*0.6));
+
+// === DECORATIVE LIGHTS (lanterns) ===
+function lantern(x, z) {
+    const g = new THREE.Group();
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.05, 1.5), new THREE.MeshStandardMaterial({ color: 0x333333 }));
+    pole.position.y = 0.75; g.add(pole);
+    const l = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8), new THREE.MeshStandardMaterial({ color: GOLD, emissive: GOLD, emissiveIntensity: 0.5 }));
+    l.position.y = 1.5; g.add(l);
+    g.position.set(x, 0, z);
+    return g;
+}
+const lanterns = [[-20,-8],[-15,-10],[5,-18],[15,-18],[25,-10],[-25,5],[-10,22],[15,22]];
+for (const [x,z] of lanterns) scene.add(lantern(x, z));
+
+// === LABELS ===
+scene.add(lb('🏡 VILLA AT DOULA, AFRICA', 0, 22, 0.2, '#c9a84c', '22px'));
+scene.add(lb('Style: African Contemporary Luxury', 0, 20.5, 0.2, '#ffffff', '14px'));
+scene.add(lb('AK ARCHITECTS & ASSOCIATES | AR. AKANSHA MALIK', 0, 19, 0.2, '#aaaaaa', '11px'));
+
+// === ANIMATION ===
+function animate() {
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+    labelRenderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    labelRenderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+console.log('✅ Villa Douala - Décoration 3D chargée !');
+</script>
+</body>
+</html>
