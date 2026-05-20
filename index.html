@@ -7,70 +7,36 @@
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #0f0f23; color: #fff; min-height: 100vh; }
-    .header {
-        background: linear-gradient(135deg, #1a1a3e, #2a1a3e);
-        padding: 25px 15px; text-align: center;
-        border-bottom: 3px solid #c9a84c;
-    }
+    .header { background: linear-gradient(135deg, #1a1a3e, #2a1a3e); padding: 25px 15px; text-align: center; border-bottom: 3px solid #c9a84c; }
     .header h1 { font-size: 22px; color: #c9a84c; }
     .header p { font-size: 13px; opacity: 0.7; margin-top: 3px; }
     .container { max-width: 600px; margin: 0 auto; padding: 15px; }
     .section { margin-bottom: 20px; }
     .section h2 { font-size: 18px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
     .card {
-        background: rgba(255,255,255,0.06);
-        border-radius: 12px; padding: 14px; margin-bottom: 10px;
-        border-left: 4px solid #c9a84c;
+        background: rgba(255,255,255,0.06); border-radius: 12px; padding: 14px; margin-bottom: 10px;
+        border-left: 4px solid #c9a84c; cursor: pointer; transition: all 0.2s;
     }
+    .card:active { transform: scale(0.98); background: rgba(255,255,255,0.1); }
     .card h3 { font-size: 15px; color: #c9a84c; margin-bottom: 4px; }
     .card p { font-size: 13px; opacity: 0.8; line-height: 1.5; }
     .card .tags { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px; }
-    .card .tag {
-        background: rgba(201,168,76,0.2); color: #c9a84c;
-        padding: 2px 8px; border-radius: 12px; font-size: 10px;
-    }
-    .btn {
-        display: block; width: 100%;
-        background: linear-gradient(135deg, #c9a84c, #a8882e);
-        color: #fff; padding: 12px; border-radius: 25px;
-        text-decoration: none; font-weight: bold; font-size: 14px;
-        text-align: center; border: none; margin-top: 8px;
-    }
-    .btn.blue { background: linear-gradient(135deg, #0077B6, #0055a8); }
-    .btn.green { background: linear-gradient(135deg, #2D6A4F, #1a4a35); }
-    .stats {
-        display: grid; grid-template-columns: repeat(4, 1fr);
-        gap: 8px; margin: 12px 0;
-    }
-    .stat {
-        background: rgba(255,255,255,0.05);
-        border-radius: 8px; padding: 10px; text-align: center;
-    }
+    .card .tag { background: rgba(201,168,76,0.2); color: #c9a84c; padding: 2px 8px; border-radius: 12px; font-size: 10px; }
+    .card .arrow { float: right; font-size: 20px; opacity: 0.5; }
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 12px 0; }
+    .stat { background: rgba(255,255,255,0.05); border-radius: 8px; padding: 10px; text-align: center; }
     .stat .num { font-size: 20px; font-weight: bold; color: #c9a84c; }
     .stat .label { font-size: 10px; opacity: 0.6; margin-top: 2px; }
-    .info-box {
-        background: rgba(0,119,182,0.12);
-        border: 1px solid rgba(0,119,182,0.3);
-        border-radius: 10px; padding: 14px; margin: 12px 0;
-        font-size: 13px; line-height: 1.6;
-    }
+    .info-box { background: rgba(0,119,182,0.12); border: 1px solid rgba(0,119,182,0.3); border-radius: 10px; padding: 14px; margin: 12px 0; font-size: 13px; line-height: 1.6; }
     .info-box strong { color: #c9a84c; }
-    .download-btn {
-        display: inline-flex; align-items: center; gap: 8px;
-        background: #28a745; color: #fff; padding: 10px 16px;
-        border-radius: 25px; text-decoration: none;
-        font-weight: bold; font-size: 13px; margin: 5px;
-    }
     .footer { text-align: center; padding: 20px; opacity: 0.4; font-size: 11px; }
-    .files-list { margin: 10px 0; }
-    .file-item {
-        display: flex; align-items: center; gap: 8px;
-        padding: 8px 12px; background: rgba(255,255,255,0.04);
-        border-radius: 8px; margin: 4px 0; font-size: 12px;
-    }
+    .file-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: rgba(255,255,255,0.04); border-radius: 8px; margin: 4px 0; font-size: 12px; }
     .file-item .icon { font-size: 18px; }
     .file-item .name { flex: 1; }
     .file-item .size { opacity: 0.5; font-size: 11px; }
+    .file-item .link { color: #c9a84c; text-decoration: none; font-weight: bold; }
+    .file-item .link:hover { text-decoration: underline; }
+    .subtitle { font-size: 12px; opacity: 0.6; margin-bottom: 10px; }
 </style>
 </head>
 <body>
@@ -83,138 +49,108 @@
 <div class="container">
 
     <div class="info-box">
-        <strong>📱 Comment ça marche ?</strong><br>
-        Les fichiers 3D ont besoin d'Internet pour charger la librairie 3D.<br>
-        <strong>Solution :</strong> Télécharge les fichiers sur ton téléphone, puis ouvre-les avec Chrome.
+        <strong>👆 Comment ça marche ?</strong><br>
+        Clique sur un fichier 3D ci-dessous pour l'ouvrir directement dans ton navigateur.<br>
+        Tu pourras explorer les plans en 3D avec tes doigts !
     </div>
 
     <div class="stats">
         <div class="stat"><div class="num">2</div><div class="label">Projets</div></div>
-        <div class="stat"><div class="num">6</div><div class="label">Fichiers 3D</div></div>
+        <div class="stat"><div class="num">6</div><div class="label">Vues 3D</div></div>
         <div class="stat"><div class="num">~3000</div><div class="label">m²</div></div>
-        <div class="stat"><div class="num">19</div><div class="label">Photos</div></div>
+        <div class="stat"><div class="num">3</div><div class="label">Guides</div></div>
     </div>
 
     <!-- STATION TOTAL -->
     <div class="section">
         <h2>⛽ Station Total</h2>
+        <div class="subtitle">Projet de construction d'une essencerie TotalEnergies • Mars 2025 • G2BI • AMC Services</div>
 
-        <div class="card">
-            <h3>🏪 RDC — Station Essence</h3>
-            <p>Boutique FOC (80 m²), Réserves, Mosquée, Locaux techniques</p>
-            <div class="tags"><span class="tag">~350 m²</span><span class="tag">Boutique</span><span class="tag">Mosquée</span></div>
-        </div>
-
-        <div class="card">
-            <h3>🏢 1er Étage — Bureaux</h3>
-            <p>QHSE, Agence Marine, ACCONFE, Transit, Salle Réunion (50 m²)</p>
-            <div class="tags"><span class="tag">~350 m²</span><span class="tag">6 Bureaux</span></div>
-        </div>
-
-        <div class="card">
-            <h3>🏛️ 2ème Étage — Direction</h3>
-            <p>Bureau DG (57 m²), Bureau PDG, DFC, RH, Accueil</p>
-            <div class="tags"><span class="tag">~264 m²</span><span class="tag">DG</span><span class="tag">PDG</span></div>
-        </div>
-
-        <div class="card" style="border-left-color: #2D6A4F;">
-            <h3>🏗️ Bâtiment Complet (3 étages)</h3>
-            <p>Vue d'ensemble avec sélecteur d'étage interactif</p>
-            <div class="tags"><span class="tag">~1 000 m²</span><span class="tag">Sélecteur</span></div>
-        </div>
-    </div>
-
-    <!-- VILLA -->
-    <div class="section">
-        <h2>🏡 Villa Douala</h2>
-
-        <div class="card" style="border-left-color: #0077B6;">
-            <h3>🌴 Villa — Vue d'ensemble</h3>
-            <p>Piscine à débordement, padel court, SPA, home cinéma, gym, guest house</p>
-            <div class="tags"><span class="tag">~2 000 m²</span><span class="tag">Piscine</span><span class="tag">Padel</span></div>
-        </div>
-
-        <div class="card" style="border-left-color: #E76F51;">
-            <h3>🎨 Villa — Version Décorée</h3>
-            <p>Style "African Contemporary Luxury" : mobilier, plantes, lanternes, palette complète</p>
-            <div class="tags"><span class="tag">Mobilier</span><span class="tag">Budget ~350k€</span></div>
-        </div>
-    </div>
-
-    <!-- TELECHARGEMENT -->
-    <div class="section">
-        <h2>📥 Télécharger les fichiers</h2>
-        
-        <div class="info-box" style="background:rgba(40,167,69,0.1); border-color:#28a745;">
-            <strong>💡 Astuce :</strong><br>
-            1. Télécharge le fichier ZIP ci-dessous<br>
-            2. Extrais-le sur ton téléphone<br>
-            3. Ouvre les fichiers .html dans <strong>Chrome</strong><br>
-            4. La 3D fonctionnera (nécessite Internet une première fois)
-        </div>
-
-        <a href="AK_Architects_Presentation.zip" class="btn green" style="text-align:center;">
-            📦 Télécharger tout le dossier (74 Mo)
+        <a href="rdc-station-essence.html" style="text-decoration:none;color:inherit;">
+            <div class="card">
+                <span class="arrow">➡️</span>
+                <h3>🏪 RDC — Station Essence</h3>
+                <p>Boutique FOC (80 m²), Réserves, Chambre froide, Mosquée, Sanitaires, Locaux techniques (TGBT, Transfo, Steppe épuration, Forage, Bornes recharge)</p>
+                <div class="tags"><span class="tag">~350 m²</span><span class="tag">Boutique</span><span class="tag">Mosquée</span></div>
+            </div>
         </a>
 
-        <p style="text-align:center; opacity:0.6; margin-top:8px; font-size:12px;">
-            Contient : 6 fichiers 3D + 3 PDF + 3 guides + 19 photos
-        </p>
+        <a href="1er-etage-bureaux.html" style="text-decoration:none;color:inherit;">
+            <div class="card">
+                <span class="arrow">➡️</span>
+                <h3>🏢 1er Étage — Bureaux</h3>
+                <p>Accueil/Assistante, SAS, Bureau 1/QHSE (23 m²), Bureau 2/Agence Marine (26 m²), Bureau 3/ACCONFE (33 m²), Bureau 4/Transit (38 m²), Salle Réunion Commune (50 m²), Archives, Reprographie, Toilettes</p>
+                <div class="tags"><span class="tag">~350 m²</span><span class="tag">6 Bureaux</span><span class="tag">Salle Réunion</span></div>
+            </div>
+        </a>
+
+        <a href="2eme-etage-direction.html" style="text-decoration:none;color:inherit;">
+            <div class="card">
+                <span class="arrow">➡️</span>
+                <h3>🏛️ 2ème Étage — Direction</h3>
+                <p>Bureau 1, RH, Bureau 2 DFC, Accueil/Assistante DG, DG (57 m²), Archives, Toilettes, Accueil/Assistante PDG, Bureau PDG (45 m²)</p>
+                <div class="tags"><span class="tag">~264 m²</span><span class="tag">DG</span><span class="tag">PDG</span></div>
+            </div>
+        </a>
+
+        <a href="batiment-complet.html" style="text-decoration:none;color:inherit;">
+            <div class="card" style="border-left-color: #2D6A4F;">
+                <span class="arrow">➡️</span>
+                <h3>🏗️ Bâtiment Complet (3 étages)</h3>
+                <p>Vue d'ensemble des 3 étages avec sélecteur interactif pour basculer entre RDC, 1er, 2ème ou tout voir</p>
+                <div class="tags"><span class="tag">~1 000 m²</span><span class="tag">Sélecteur d'étage</span></div>
+            </div>
+        </a>
     </div>
 
-    <!-- FICHIERS INDIVIDUELS -->
+    <!-- VILLA DOUALA -->
     <div class="section">
-        <h2>📄 Fichiers individuels</h2>
-        
-        <div class="files-list">
-            <div class="file-item">
-                <span class="icon">🏠</span>
-                <span class="name">index.html (page d'accueil)</span>
-                <span class="size">8 Ko</span>
+        <h2>🏡 Villa Douala</h2>
+        <div class="subtitle">AK Architects & Associates • Ar. Akansha Malik • Version R4 - 07/05/2026</div>
+
+        <a href="villa-ensemble.html" style="text-decoration:none;color:inherit;">
+            <div class="card" style="border-left-color: #0077B6;">
+                <span class="arrow">➡️</span>
+                <h3>🌴 Villa — Vue d'ensemble</h3>
+                <p>Plan masse complet : Grand Living (140 m²), Dining (70 m²), Cuisine (44 m²), Home Theatre (45 m²), Bar (65 m²), SPA/Hammam/Sauna, Gym (38 m²), Guest House, Piscine à débordement, Padel Court, Bar Shack, Mosquée</p>
+                <div class="tags"><span class="tag">~2 000 m²</span><span class="tag">Piscine</span><span class="tag">Padel</span><span class="tag">SPA</span></div>
             </div>
-            <div class="file-item">
-                <span class="icon">🏪</span>
-                <span class="name">Station Total - RDC</span>
-                <span class="size">12 Ko</span>
+        </a>
+
+        <a href="villa-decoration.html" style="text-decoration:none;color:inherit;">
+            <div class="card" style="border-left-color: #E76F51;">
+                <span class="arrow">➡️</span>
+                <h3>🎨 Villa — Version Décorée</h3>
+                <p>Style "African Contemporary Luxury" : canapés lin, table iroko, îlot cuisine vert forêt, comptoir bar marbre noir, sièges cinéma, transats piscine, palmiers, lanternes dorées</p>
+                <div class="tags"><span class="tag">Mobilier inclus</span><span class="tag">Budget ~350k€</span></div>
             </div>
-            <div class="file-item">
-                <span class="icon">🏢</span>
-                <span class="name">Station Total - 1er étage</span>
-                <span class="size">15 Ko</span>
-            </div>
-            <div class="file-item">
-                <span class="icon">🏛️</span>
-                <span class="name">Station Total - 2ème étage</span>
-                <span class="size">25 Ko</span>
-            </div>
-            <div class="file-item">
-                <span class="icon">🏗️</span>
-                <span class="name">Station Total - Bâtiment complet</span>
-                <span class="size">22 Ko</span>
-            </div>
-            <div class="file-item">
-                <span class="icon">🌴</span>
-                <span class="name">Villa Douala - Ensemble</span>
-                <span class="size">20 Ko</span>
-            </div>
-            <div class="file-item">
-                <span class="icon">🎨</span>
-                <span class="name">Villa Douala - Décorée</span>
-                <span class="size">20 Ko</span>
-            </div>
-        </div>
+        </a>
     </div>
 
     <!-- DOCUMENTS -->
     <div class="section">
-        <h2>📋 Documents</h2>
-        <div class="card"><h3>📋 Aménagement Bureaux</h3><p>Analyse des surfaces, propositions design intérieur Station Total</p></div>
-        <div class="card"><h3>📋 Analyse Villa Douala</h3><p>Description pièce par pièce, comparaison R4 vs simple</p></div>
-        <div class="card"><h3>🎨 Guide Décoration Villa</h3><p>Palette couleurs, mobilier, budgets, matériaux climat tropical</p></div>
+        <h2>📋 Documents d'Analyse</h2>
+
+        <div class="file-item">
+            <span class="icon">📄</span>
+            <span class="name">Aménagement Bureaux</span>
+            <a class="link" href="amenagement-bureaux.md" target="_blank">📖 Lire</a>
+        </div>
+        <div class="file-item">
+            <span class="icon">📄</span>
+            <span class="name">Analyse Villa Douala</span>
+            <a class="link" href="analyse-villa.md" target="_blank">📖 Lire</a>
+        </div>
+        <div class="file-item">
+            <span class="icon">📄</span>
+            <span class="name">Guide Décoration Villa</span>
+            <a class="link" href="guide-decoration-villa.md" target="_blank">📖 Lire</a>
+        </div>
     </div>
 
     <div class="footer">
-        AK ARCHITECTS & ASSOCIATES • AR. AKANSHA MALIK • 2026
+        AK ARCHITECTS & ASSOCIATES • AR. AKANSHA MALIK • 2026<br>
+        <span style="opacity:0.5;">https://valerytchienda-blip.github.io/ak-architects-douala/</span>
     </div>
 
 </div>
